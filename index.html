@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>批量生成二维码</title>
+        <style>
+            body {
+                font-size: 14px;
+                font-family: PingFangSC-Regular;
+                line-height: 1.5;
+                color: #333;
+            }
+            h3 {
+                text-align: center;
+            }
+            .form {
+                width: 500px;
+                margin: 0 auto;
+            }
+            .form .row {
+                display: flex;
+                align-items: center;
+                margin: 15px 0;
+            }
+            .row .text {
+                width: 100px;
+                text-align: right;
+                margin-right: 15px;
+                color: #999;
+            }
+            input {
+                outline: none;
+                padding: 5px 10px;
+                font-size: 14px;
+                width: 200px;
+            }
+            input::placeholder,
+            textarea::placeholder {
+                color: #ccc;
+            }
+            input[type="radio"] {
+                width: 12px;
+                height: 13px;
+                margin: 0 10px 0 0;
+            }
+            textarea {
+                width: 300px;
+                height: 150px;
+                padding: 10px;
+                border: 0.5px solid #d8d8d8;
+                outline: none;
+                font-size: 14px;
+            }
+            .btn-row {
+                text-align: center;
+                margin: 20px 0;
+            }
+            .btn-row button {
+                width: 300px;
+                padding: 10px 20px;
+                font-size: 14px;
+                color: #333;
+            }
+            .response {
+                padding: 20px;
+                font-weight: bold;
+                word-break: break-all;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>批量生成小程序码</h3>
+        <div class="form">
+            <div class="row">
+                <div class="text">appid</div>
+                <div class="item">
+                    <input id="appid" placeholder="请输入appid" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="text">appsecret</div>
+                <div class="item">
+                    <input id="appsecret" placeholder="请输入appsecret" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="text">微信接口</div>
+                <div class="item">
+                    <div>
+                        <input type="radio" checked disabled /><label
+                            style="color: #999;"
+                            >https://api.weixin.qq.com/wxa/getwxacode</label
+                        >
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="text">页面路径</div>
+                <div class="item">
+                    <input id="path" placeholder="请输入页面路径" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="text">query参数</div>
+                <div class="item">
+                    <input
+                        id="queryKey"
+                        placeholder="请输入query参数，如：channel"
+                    />
+                </div>
+            </div>
+            <div class="row">
+                <div class="text" style="align-self: flex-start;">参数取值</div>
+                <div class="item">
+                    <textarea
+                        id="queryParams"
+                        placeholder="请输入query参数的取值，用换行隔开，如：&#13;&#10;shanghai&#13;&#10;beijing"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button onclick="submit()" id="submitBtn">提交</button>
+            </div>
+            <div class="response"></div>
+        </div>
+
+        <script>
+            function submit() {
+                const values = getFormdata();
+                if (validate(values)) {
+                    process(values);
+                } else {
+                    alert("请先完善所有字段！");
+                }
+            }
+            function getFormdata() {
+                const obj = {};
+                obj.appid = document.querySelector("#appid").value.trim();
+                obj.appsecret = document
+                    .querySelector("#appsecret")
+                    .value.trim();
+                obj.path = document.querySelector("#path").value.trim();
+                obj.queryKey = document.querySelector("#queryKey").value.trim();
+                obj.queryParams = document
+                    .querySelector("#queryParams")
+                    .value.trim();
+                return obj;
+            }
+            function validate(obj) {
+                return Object.keys(obj).every(function(key) {
+                    return obj[key];
+                });
+            }
+            function process(formdata) {
+                const btn = document.querySelector("#submitBtn");
+                const resultBlock = document.querySelector('.response');
+                btn.innerHTML = "加载中...";
+                btn.setAttribute("disabled", true);
+
+                fetch(`/api/process`, {
+                    method: "post",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formdata),
+                })
+                    .then(function(res) {
+                        if (!res.ok) throw res;
+
+                        res.json()
+                            .then(function(data) {
+                                console.log(data);
+                                if (!/^\/\d+/.test(data.bundleurl)) throw data;
+                                btn.innerHTML = '处理完成';
+                                resultBlock.innerHTML = `<div>
+                                        已为您生成小程序码压缩包，点击下载：<a href="${data.bundleurl}">${location.origin}${data.bundleurl}</a><br />
+                                        链接将在两小后失效，请及时下载保存。
+                                    </div>`;
+                                
+                            })
+                            .catch(function(err) {
+                                console.error(err)
+                                btn.innerHTML = '处理失败';
+                                resultBlock.innerHTML = err.message || JSON.stringify(err);
+                            });
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        btn.innerHTML = '处理失败';
+                        resultBlock.innerHTML = err.message || JSON.stringify(err);;
+                    });
+            }
+        </script>
+    </body>
+</html>
