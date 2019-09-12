@@ -33,7 +33,7 @@ const getAccessToken = (appid, appSecrect) => new Promise((resolve, reject) => {
     });
 });
 
-const getQRCodeImg = (token, path, filename) => new Promise((resolve, reject) => {
+ const getQRCodeImg = (token, path, filename) => new Promise((resolve, reject) => {
     const options = {
         url: `https://api.weixin.qq.com/wxa/getwxacode?access_token=${token}`,
         method: 'POST',
@@ -46,8 +46,8 @@ const getQRCodeImg = (token, path, filename) => new Promise((resolve, reject) =>
 });
 
 module.exports = async (options) => {
-    const { appid, appsecret, path, queryKey, queryParams } = options;
-    const token = await getAccessToken(appid, appsecret);
+    const { appid, appsecret, path, queryKey, queryParams, inputToken } = options;
+    const token = inputToken || await getAccessToken(appid, appsecret);
     const miniappPagePath = path + '?' + queryKey + '=';
     const params = queryParams.split('\n').map(key => key.trim()).filter(Boolean);
     const childDir = `${new Date().getTime()}`;

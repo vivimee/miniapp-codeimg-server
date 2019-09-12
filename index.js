@@ -13,7 +13,8 @@ const html = fs.readFileSync('./index.html');
 router.get('/', async(ctx, next) => {
     await next();
     ctx.type = 'html';
-    ctx.body = html;
+    // ctx.body = html;
+    ctx.body = fs.readFileSync('./index.html');
 });
 
 router.post('/api/process', Koabody(), async(ctx, next) => {
